@@ -1,41 +1,41 @@
-'use strict';
+'use strict'
 
 const config = require('./config')
 const rp = require('request-promise')
-const database = require('scf-nodejs-serverlessdb-sdk').database;//cynosDB数据库
+const database = require('scf-nodejs-serverlessdb-sdk').database//cynosDB数据库
 
 function isValidAccessToken(data) {
     //检测传入的参数是否是有效的
     if (!data && !data.access_token && !data.expires_in) {
       //代表access_token无效的
-      return false;
+      return false
     }
     
-    return data.expires_in > Date.now();
+    return data.expires_in > Date.now()
   
 }
 
 async function saveAccessToken (data) {
-    const connection = await database().connection();
+    const connection = await database().connection()
     const createVlookTable = 'create table if not exists vlook_table(id int primary key auto_increment,name varchar(255) not null,value  varchar(255) not null,expires_in bigint)'
     await connection.queryAsync(createVlookTable)
     //存在就更新（或不做任何动作），不存在就添加
     const dbData = await connection.queryAsync('select * from vlook_table where name = "access_token"')
     if(dbData.length==0){
         const s = 'insert into vlook_table(name,value,expires_in) values ("access_token", "'+ data.access_token + '",' + data.expires_in + ')'
-        console.log("addAccessToken===", s);
+        console.log("addAccessToken===", s)
         const result = await connection.queryAsync(s)
-        console.log("addAccessToken result===", result);
-    }else{''
+        console.log("addAccessToken result===", result)
+    }else{
         const s = 'update vlook_table set value = "' + data.access_token + '", expires_in = '+ data.expires_in + ' where name = "access_token"'
-        console.log("updateAccessToken===", s);
+        console.log("updateAccessToken===", s)
         const result = await connection.queryAsync(s)
-        console.log("updateAccessToken result===", result);
+        console.log("updateAccessToken result===", result)
     }
 }
 
 exports.get_access_token = async function () {
-    let connection = await database().connection();
+    let connection = await database().connection()
     const queryExist = 'select table_name from information_schema.tables where table_name = "vlook_table"'
     let result = await connection.queryAsync(queryExist)//表是否存在
    
@@ -48,9 +48,9 @@ exports.get_access_token = async function () {
                 access_token: data[0].value,
                 expires_in: data[0].expires_in
             }
-            console.log("dbres ===", dbres)
+            console.log("access_token dbres ===", dbres)
             if(isValidAccessToken(dbres)){
-                console.log("isValidAccessToken===", dbres);
+                console.log("isValidAccessToken===", dbres)
                 return dbres
             }    
         }
@@ -59,7 +59,7 @@ exports.get_access_token = async function () {
     const appID = config.weixin.AppId
     const appSecret = config.weixin.AppSecret
     //定义请求的地址
-    const url = `https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=${appID}&secret=${appSecret}`;
+    const url = `https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=${appID}&secret=${appSecret}`
     //发送请求
     /*
       request
@@ -74,15 +74,15 @@ exports.get_access_token = async function () {
                   expires_in: 7200 }
                  */
                 //设置access_token的过期时间
-                res.expires_in = Date.now() + (res.expires_in - 300) * 1000;
+                res.expires_in = Date.now() + (res.expires_in - 300) * 1000
                 saveAccessToken(res)
                 //将promise对象状态改成成功的状态
-                resolve(res);
+                resolve(res)
             })
             .catch(err => {
-                console.log("error===", err);
+                console.log("error===", err)
                 //将promise对象状态改成失败的状态
-                reject('getAccessToken方法出了问题：' + err);
+                reject('getAccessToken方法出了问题：' + err)
             })
     })
-};
+}

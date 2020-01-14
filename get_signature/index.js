@@ -1,10 +1,10 @@
-'use strict';
+'use strict'
 
 // 云函数入口文件
 
-const ticket_getter = require('./ticket_getter.js');
+const ticket_getter = require('./ticket_getter.js')
 const cloud = require('wx-server-sdk')
-var sign = require('./sign.js');
+var sign = require('./sign.js')
 
 cloud.init()
 
@@ -20,4 +20,4 @@ exports.main_handler = async (event, context) => {
     const ret = sign(data.ticket, "https://uss.sonicers.com/mouse/index.html")
     console.log("ret==========", ret)
     return ret
-};
+}
