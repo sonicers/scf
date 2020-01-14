@@ -3,6 +3,7 @@
 const token_getter = require('./token_getter.js')
 const rp = require('request-promise')
 const database = require('scf-nodejs-serverlessdb-sdk').database//cynosDB数据库
+let connection
 
 
 function isValidTicket(data) {
@@ -18,9 +19,8 @@ function isValidTicket(data) {
 
 async function saveTicket (data) {
     console.log("saveTicket=======")
-    const connection = await database().connection()
-    console.log("connection ===", connection)
     const createVlookTable = 'create table if not exists vlook_table(id int primary key auto_increment,name varchar(255) not null,value  varchar(255) not null,expires_in bigint)'
+    // console.log("connection=======",connection)
     const result = await connection.queryAsync(createVlookTable)
     console.log("create table===", result)
     const dbData = await connection.queryAsync('select * from vlook_table where name = "ticket"')
@@ -40,7 +40,7 @@ async function saveTicket (data) {
 
 exports.get_ticket = async function () {
 
-    let connection = await database().connection()
+    connection = await database().connection()
     const queryExist = 'select table_name from information_schema.tables where table_name = "vlook_table"'
     let result = await connection.queryAsync(queryExist)//表是否存在
    

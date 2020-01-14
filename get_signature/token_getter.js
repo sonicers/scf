@@ -3,6 +3,7 @@
 const config = require('./config')
 const rp = require('request-promise')
 const database = require('scf-nodejs-serverlessdb-sdk').database//cynosDB数据库
+let connection
 
 function isValidAccessToken(data) {
     //检测传入的参数是否是有效的
@@ -16,7 +17,6 @@ function isValidAccessToken(data) {
 }
 
 async function saveAccessToken (data) {
-    const connection = await database().connection()
     const createVlookTable = 'create table if not exists vlook_table(id int primary key auto_increment,name varchar(255) not null,value  varchar(255) not null,expires_in bigint)'
     await connection.queryAsync(createVlookTable)
     //存在就更新（或不做任何动作），不存在就添加
@@ -35,7 +35,7 @@ async function saveAccessToken (data) {
 }
 
 exports.get_access_token = async function () {
-    let connection = await database().connection()
+    connection = await database().connection()
     const queryExist = 'select table_name from information_schema.tables where table_name = "vlook_table"'
     let result = await connection.queryAsync(queryExist)//表是否存在
    
