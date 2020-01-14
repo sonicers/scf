@@ -24,7 +24,7 @@ async function saveAccessToken (data) {
     if(dbData.length==0){
         const s = 'insert into vlook_table(name,value,expires_in) values ("access_token", "'+ data.access_token + '",' + data.expires_in + ')'
         console.log("addAccessToken===", s);
-        const result = await connection.queryAsync()
+        const result = await connection.queryAsync(s)
         console.log("addAccessToken result===", result);
     }else{''
         const s = 'update vlook_table set value = "' + data.access_token + '", expires_in = '+ data.expires_in + ' where name = "access_token"'
@@ -42,11 +42,18 @@ exports.get_access_token = async function () {
 
     if(result.length>0){
         const data = await connection.queryAsync('select * from vlook_table where name = "access_token"')
-        console.log("access_token data===", data);
-        // if(isValidAccessToken(data)){
-        //     console.log("isValidAccessToken===", data);
-        //     return data
-        // }    
+        console.log("data[0]===", data[0])
+        if(data[0]){
+            const dbres = {
+                access_token: data[0].value,
+                expires_in: data[0].expires_in
+            }
+            console.log("dbres ===", dbres)
+            if(isValidAccessToken(dbres)){
+                console.log("isValidAccessToken===", dbres);
+                return dbres
+            }    
+        }
     }
 
     const appID = config.weixin.AppId
