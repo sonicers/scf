@@ -18,36 +18,33 @@ function isValidTicket(data) {
 
 async function saveTicket(data) {
     console.log("saveTicket=======")
-    const connection = await database().connection()
+    const pool = await database().pool()
     const createVlookTable = 'create table if not exists vlook_table(id int primary key auto_increment,name varchar(255) not null,value  varchar(255) not null,expires_in bigint)'
-    // console.log("connection=======",connection)
-    const result = await connection.queryAsync(createVlookTable)
+    const result = await pool.queryAsync(createVlookTable)
     console.log("create table===", result)
-    const dbData = await connection.queryAsync('select * from vlook_table where name = "ticket"')
+    const dbData = await pool.queryAsync('select * from vlook_table where name = "ticket"')
     console.log("saveTicket dbData===", dbData)
     if (dbData.length == 0) {
         const s = 'insert into vlook_table(name,value,expires_in) values ("ticket", "' + data.ticket + '",' + data.expires_in + ')'
         console.log("addTicket===", s)
-        const result = await connection.queryAsync(s)
+        const result = await pool.queryAsync(s)
         console.log("addTicket result===", result)
     } else {
         const s = 'update vlook_table set value = "' + data.ticket + '", expires_in = ' + data.expires_in + ' where name = "ticket"'
         console.log("updateTicket===", s)
-        const result = await connection.queryAsync(s)
+        const result = await pool.queryAsync(s)
         console.log("updateTicket result===", result)
     }
-    // connection.close()
 }
 
 exports.get_ticket = async function () {
-
-    const connection = await database().connection()
+    const pool = await database().pool()
     const queryExist = 'select table_name from information_schema.tables where table_name = "vlook_table"'
-    let result = await connection.queryAsync(queryExist)//表是否存在
+    let result = await pool.queryAsync(queryExist)//表是否存在
 
 
     if (result.length > 0) {
-        const data = await connection.queryAsync('select * from vlook_table where name = "ticket"')
+        const data = await pool.queryAsync('select * from vlook_table where name = "ticket"')
         console.log("data[0]===", data[0])
         if (data[0]) {
             const dbres = {
@@ -57,7 +54,6 @@ exports.get_ticket = async function () {
             console.log("ticket dbres ===", dbres)
             if (isValidTicket(dbres)) {
                 console.log("isValidTicket===", dbres)
-                // connection.close()
                 return dbres
             }
         }
